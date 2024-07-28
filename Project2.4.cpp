@@ -9,59 +9,59 @@
 using namespace std;
 
 // Function Prototypes
-void displayWelcomeMessage(string &name);
-float getStartingMoney();
-void gameInstructions();
-void playGame(string name, float &money, bool *jackpot = nullptr);
-void placeBet(float &dealer, float money);
-void rollDice(int &dice1, int &dice2, int &result);
-void processBet(int bet, int result, float &money, float dealer);
-void processBet(int bet, int result, float &money, float dealer, string name);
-void processBet(int bet, int result, float &money, float dealer, string name, bool *jackpot);
-bool checkJackpot(int result, int bet, bool &jackpot);
+void showMsg(string &name);
+float getStartMoney();
+void showInstr();
+void playGame(string name, float &cash, bool *jack = nullptr);
+void placeBet(float &bet, float cash);
+void rollDice(int &die1, int &die2, int &sum);
+void processBet(int bet, int sum, float &cash, float betAmt);
+void processBet(int bet, int sum, float &cash, float betAmt, string name);
+void processBet(int bet, int sum, float &cash, float betAmt, string name, bool *jack);
+bool checkJack(int sum, int bet, bool &jack);
 bool playAgain();
-void displayGameCount();
-void displayFinalSummary(float startingMoney, float finalMoney);
-void exitGame(float startingMoney, float finalMoney, const string &name);
+void showGameCount();
+void showSummary(float startCash, float endCash);
+void endGame(float startCash, float endCash, const string &name);
 
 // Main Function
 int main(int argc, char** argv) {
     srand(static_cast<unsigned int>(time(0)));
 
     string name;
-    float money, startingMoney;
-    bool jackpot = false;
+    float cash, startCash;
+    bool jack = false;
 
-    displayWelcomeMessage(name);
-    money = getStartingMoney();
-    startingMoney = money; // Track the initial amount of money
-    gameInstructions();
+    showMsg(name);
+    cash = getStartMoney();
+    startCash = cash; // Track the initial amount of money
+    showInstr();
 
     do {
-        playGame(name, money, &jackpot);
-        displayGameCount();
-        if (money <= 0) {
+        playGame(name, cash, &jack);
+        showGameCount();
+        if (cash <= 0) {
             cout << "You have run out of money. Would you like to add more money to continue playing? (y/n): ";
             char choice;
             cin >> choice;
             if (choice == 'y' || choice == 'Y') {
-                money = getStartingMoney();
-                startingMoney += money; // Add to the initial amount of money
+                cash = getStartMoney();
+                startCash += cash; // Add to the initial amount of money
             } else {
                 cout << "Thanks for playing!" << endl;
-                exitGame(startingMoney, money, name); // Call exitGame function
+                endGame(startCash, cash, name); // Call endGame function
                 return 0;
             }
         }
-    } while (money > 0 && playAgain());
+    } while (cash > 0 && playAgain());
 
-    exitGame(startingMoney, money, name); // Call exitGame function
+    endGame(startCash, cash, name); // Call endGame function
     return 0;
 }
 
 // Function Definitions
 
-void displayWelcomeMessage(string &name) {
+void showMsg(string &name) {
     cout << fixed << setprecision(2);
     cout << "Welcome! What's your name?  ";
     cin >> name;
@@ -71,42 +71,42 @@ void displayWelcomeMessage(string &name) {
     cout << "and you're going to try to predict and bet on whether the number you rolled is lower than 7, higher than 7, or it equals 7. " << endl;
 }
 
-float getStartingMoney() {
-    float money;
+float getStartMoney() {
+    float cash;
     cout << "You must start off with $1 or more to play." << endl << endl;
     cout << "First of all, how much money do you want to start with?" << endl;
     cout << "$";
-    cin >> money;
+    cin >> cash;
 
-    while (money < 1) {
+    while (cash < 1) {
         cout << "Not enough money to play. Please enter the correct amount: $";
-        cin >> money;
+        cin >> cash;
     }
-    return money;
+    return cash;
 }
 
-void gameInstructions() {
+void showInstr() {
     cout << "Now that you have some money to bet with. Let's start." << endl << endl;
     cout << "Choose wisely. " << endl << endl;
 }
 
-void playGame(string name, float &money, bool *jackpot) {
+void playGame(string name, float &cash, bool *jack) {
     int numBets;
     cout << "How many bets would you like to place? ";
     cin >> numBets;
 
     // Use a 2D array to store dice results and bets
-    int** results = new int*[numBets];
+    int** res = new int*[numBets];
     for (int i = 0; i < numBets; ++i) {
-        results[i] = new int[2]; // Store dice results for each bet
+        res[i] = new int[2]; // Store dice results for each bet
     }
     int* bets = new int[numBets];
-    float* dealers = new float[numBets];
+    float* betAmt = new float[numBets];
 
     for (int i = 0; i < numBets; i++) {
-        if (money < 1) {
+        if (cash < 1) {
             cout << "You don't have enough money to continue betting. Please add more money." << endl;
-            money = getStartingMoney();
+            cash = getStartMoney();
         }
 
         cout << "Bet " << (i + 1) << ":" << endl;
@@ -122,207 +122,208 @@ void playGame(string name, float &money, bool *jackpot) {
             cin >> bets[i];
         }
 
-        cout << endl << "How much would you like to bet?\t\tCurrent Balance $" << money << endl;
-        placeBet(dealers[i], money);
+        cout << endl << "How much would you like to bet?\t\tCurrent Balance $" << cash << endl;
+        placeBet(betAmt[i], cash);
 
         for (int j = 1; j <= 3; j++) {
             cout << "Loading..." << endl;
         }
         cout << "...Dice Rolling..." << endl;
 
-        int dice1, dice2;
-        rollDice(dice1, dice2, results[i][0]);
-        results[i][1] = dice1 + dice2; // Store total dice result
+        int die1, die2;
+        rollDice(die1, die2, res[i][0]);
+        res[i][1] = die1 + die2; // Store total dice result
 
         // Call the overloaded function with different parameters
-        processBet(bets[i], results[i][1], money, dealers[i], name, jackpot);
+        processBet(bets[i], res[i][1], cash, betAmt[i], name, jack);
         // Uncomment the following line to test the overloaded functions without name or jackpot
-        // processBet(bets[i], results[i][1], money, dealers[i]);
+        // processBet(bets[i], res[i][1], cash, betAmt[i]);
     }
 
     // Clean up 2D array
     for (int i = 0; i < numBets; ++i) {
-        delete[] results[i];
+        delete[] res[i];
     }
-    delete[] results;
+    delete[] res;
     delete[] bets;
-    delete[] dealers;
+    delete[] betAmt;
 }
 
-void placeBet(float &dealer, float money) {
-    cin >> dealer;
-    while (dealer > money || dealer <= 0) {
-        cout << "Invalid bet. Please enter an amount between 1 and " << money << ": $";
-        cin >> dealer;
+void placeBet(float &bet, float cash) {
+    cin >> bet;
+    while (bet > cash || bet <= 0) {
+        cout << "Invalid bet. Please enter an amount between 1 and " << cash << ": $";
+        cin >> bet;
     }
 }
 
-void rollDice(int &dice1, int &dice2, int &result) {
-    dice1 = rand() % 6 + 1; // [1-6]
-    dice2 = rand() % 6 + 1; // [1-6]
-    result = dice1 + dice2; // Sum of the two dice
-    cout << "Dice 1: " << dice1 << ", Dice 2: " << dice2 << ", Total: " << result << endl;
+void rollDice(int &die1, int &die2, int &sum) {
+    die1 = rand() % 6 + 1; // [1-6]
+    die2 = rand() % 6 + 1; // [1-6]
+    sum = die1 + die2; // Sum of the two dice
+    cout << "Dice 1: " << die1 << ", Dice 2: " << die2 << ", Total: " << sum << endl;
 }
 
-void processBet(int bet, int result, float &money, float dealer) {
+void processBet(int bet, int sum, float &cash, float betAmt) {
     // Default implementation without name or jackpot
     switch (bet) {
         case 1:
             cout << "Your bet is that the total you rolled is smaller than 7. Let's find out!" << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result <= 6) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum <= 6) {
                 cout << "Congratulations, you win!" << endl;
-                money += dealer * 2;
+                cash += betAmt * 2;
             } else {
                 cout << "Sorry, you lost!" << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
         case 2:
             cout << "Your bet is that the number rolled is bigger than 7. " << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result >= 8) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum >= 8) {
                 cout << "Congratulations, you win!" << endl;
-                money += dealer * 2;
+                cash += betAmt * 2;
             } else {
                 cout << "Sorry, you lost!" << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
         case 3:
             cout << "Your bet is that you rolled a 7, let's see. " << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result == 7) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum == 7) {
                 cout << "Wow, you're super lucky! You won!" << endl;
-                money += (dealer * 4);
+                cash += (betAmt * 4);
             } else {
                 cout << "Sorry, you lost." << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
     }
-    cout << "Current Money $" << money << endl << endl;
+    cout << "Current Money $" << cash << endl << endl;
 }
 
-void processBet(int bet, int result, float &money, float dealer, string name) {
+void processBet(int bet, int sum, float &cash, float betAmt, string name) {
     // Overloaded version with name
     switch (bet) {
         case 1:
             cout << "Your bet is that the total you rolled is smaller than 7. Let's find out!" << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result <= 6) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum <= 6) {
                 cout << "Congratulations " << name << ", you win! Are you some sort of wizard?!" << endl;
-                money += dealer * 2;
+                cash += betAmt * 2;
             } else {
                 cout << "Sorry, you lost! Try again." << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
         case 2:
             cout << "Your bet is that the number rolled is bigger than 7. " << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result >= 8) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum >= 8) {
                 cout << " Congratulations " << name << ", you win! Are you some sort of wizard?!" << endl;
-                money += dealer * 2;
+                cash += betAmt * 2;
             } else {
                 cout << "Sorry " << name << ", you lost! Give it another shot, maybe you'll win this time." << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
         case 3:
             cout << "Your bet is that you rolled a 7, let's see. " << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result == 7) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum == 7) {
                 cout << "Wow " << name << ", you're super lucky! You won! Are you a wizard?!" << endl;
-                money += (dealer * 4);
+                cash += (betAmt * 4);
             } else {
                 cout << "Sorry " << name << ", you lost." << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
     }
-    cout << "Current Money $" << money << endl << endl;
+    cout << "Current Money $" << cash << endl << endl;
 }
 
-void processBet(int bet, int result, float &money, float dealer, string name, bool *jackpot) {
+void processBet(int bet, int sum, float &cash, float betAmt, string name, bool *jack) {
     // Overloaded version with name and jackpot
     switch (bet) {
         case 1:
             cout << "Your bet is that the total you rolled is smaller than 7. Let's find out!" << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result <= 6) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum <= 6) {
                 cout << "Congratulations " << name << ", you win! Are you some sort of wizard?!" << endl;
-                money += dealer * 2;
-                if (checkJackpot(result, bet, *jackpot)) {
+                cash += betAmt * 2;
+                if (checkJack(sum, bet, *jack)) {
                     cout << "Jackpot! Extra $100 added!" << endl;
-                    money += 100;
+                    cash += 100;
                 }
             } else {
                 cout << "Sorry, you lost!" << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
         case 2:
             cout << "Your bet is that the number rolled is bigger than 7. " << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result >= 8) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum >= 8) {
                 cout << " Congratulations " << name << ", you win! Are you some sort of wizard?!" << endl;
-                money += dealer * 2;
-                if (checkJackpot(result, bet, *jackpot)) {
+                cash += betAmt * 2;
+                if (checkJack(sum, bet, *jack)) {
                     cout << "Jackpot! Extra $100 added!" << endl;
-                    money += 100;
+                    cash += 100;
                 }
             } else {
                 cout << "Sorry " << name << ", you lost! Give it another shot, maybe you'll win this time." << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
         case 3:
             cout << "Your bet is that you rolled a 7, let's see. " << endl << endl;
-            cout << "You rolled a " << result << "!" << endl;
-            if (result == 7) {
+            cout << "You rolled a " << sum << "!" << endl;
+            if (sum == 7) {
                 cout << "Wow " << name << ", you're super lucky! You won! Are you a wizard?!" << endl;
-                money += (dealer * 4);
-                if (checkJackpot(result, bet, *jackpot)) {
+                cash += (betAmt * 4);
+                if (checkJack(sum, bet, *jack)) {
                     cout << "Jackpot! Extra $100 added!" << endl;
-                    money += 100;
+                    cash += 100;
                 }
             } else {
                 cout << "Sorry " << name << ", you lost." << endl;
-                money -= dealer;
+                cash -= betAmt;
             }
             break;
     }
-    cout << "Current Money $" << money << endl << endl;
+    cout << "Current Money $" << cash << endl << endl;
 }
 
-bool checkJackpot(int result, int bet, bool &jackpot) {
-    if (result == 7 && bet == 3) {
-        jackpot = true;
+bool checkJack(int sum, int bet, bool &jack) {
+    if (sum == 7 && bet == 3) {
+        jack = true;
         return true;
     }
     return false;
 }
 
 bool playAgain() {
-    char answer;
+    char ans;
     cout << "Would you like to play again? (y/n): ";
-    cin >> answer;
-    return (answer == 'y' || answer == 'Y');
+    cin >> ans;
+    return (ans == 'y' || ans == 'Y');
 }
 
-void displayGameCount() {
-    static int gameCount = 0;
-    gameCount++;
-    cout << "Games played so far: " << gameCount << endl;
+void showGameCount() {
+    static int gameCnt = 0;
+    gameCnt++;
+    cout << "Games played so far: " << gameCnt << endl;
 }
 
-void displayFinalSummary(float startingMoney, float finalMoney) {
-    cout << "Starting Money: $" << startingMoney << endl;
-    cout << "Final Money: $" << finalMoney << endl;
+void showSummary(float startCash, float endCash) {
+    cout << "Starting Money: $" << startCash << endl;
+    cout << "Final Money: $" << endCash << endl;
 }
 
-void exitGame(float startingMoney, float finalMoney, const string &name) {
-    displayFinalSummary(startingMoney, finalMoney);
+void endGame(float startCash, float endCash, const string &name) {
+    showSummary(startCash, endCash);
     cout << "Thank you for playing, " << name << "! See you next time!" << endl;
 }
+
